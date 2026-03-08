@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduQuest — Student</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    <span class="nav-title">EduQuest</span>
+    <span class="nav-badge student">Student</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-username"></span>
+    <button class="btn btn-ghost" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- QUIZ LIST VIEW -->
+  <div id="view-quizzes" class="page">
+    <h2 class="page-title">Available Quizzes</h2>
+    <p class="page-subtitle" id="quiz-count">Loading…</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showView('quizzes')">📚 Quizzes</button>
+      <button class="tab-btn"        onclick="showView('scores')">📊 My Scores</button>
+    </div>
+    <div id="quiz-list" class="grid-2"></div>
+  </div>
+
+  <!-- SCORES VIEW -->
+  <div id="view-scores" class="page hidden">
+    <h2 class="page-title">My Scores</h2>
+    <p class="page-subtitle">Your performance history</p>
+    <div class="tabs">
+      <button class="tab-btn"        onclick="showView('quizzes')">📚 Quizzes</button>
+      <button class="tab-btn active" onclick="showView('scores')">📊 My Scores</button>
+    </div>
+
+    <div class="stat-grid" id="score-stats"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-teal" id="btn-study-plan" onclick="getStudyPlan()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Study Plan
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quiz History</div>
+      <div class="table-wrap">
+        <table id="scores-table">
+          <thead><tr><th>Quiz</th><th>Score</th><th>Correct</th><th>Date</th></tr></thead>
+          <tbody id="scores-tbody"></tbody>
+        </table>
+      </div>
+      <div id="scores-empty" class="empty-state hidden">
+        <div class="empty-icon">📝</div>
+        No scores yet. Take a quiz to get started!
+      </div>
+    </div>
+
+    <div id="study-plan-panel" class="ai-panel hidden">
+      <div class="ai-panel-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Personalised Study Plan
+      </div>
+      <div id="study-plan-text" class="ai-text"></div>
+    </div>
+  </div>
+
+  <!-- QUIZ TAKING VIEW -->
+  <div id="view-quiz" class="page hidden">
+    <div class="quiz-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div id="q-quiz-title" style="font-weight:600;color:var(--text-dim);font-size:0.9rem"></div>
+        </div>
+        <div class="quiz-timer" id="quiz-timer">⏱ 10:00</div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div id="q-number" class="q-number"></div>
+      <div id="q-text"   class="q-text"></div>
+      <div id="q-options"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:24px;flex-wrap:wrap;gap:12px">
+        <button class="btn btn-ghost" id="btn-prev" onclick="prevQ()">← Previous</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextOrSubmit()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT VIEW -->
+  <div id="view-result" class="page hidden">
+    <div class="quiz-wrap">
+      <div style="text-align:center;margin-bottom:32px">
+        <div id="result-ring" class="result-score-ring">
+          <div class="result-score-pct" id="result-pct"></div>
+          <div class="result-score-label">SCORE</div>
+        </div>
+        <h2 id="result-heading" style="margin-bottom:8px"></h2>
+        <p id="result-sub" style="color:var(--text-dim)"></p>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="btn btn-teal" id="btn-ai-feedback" onclick="getAIFeedback()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Get AI Feedback
+        </button>
+        <button class="btn btn-ghost" onclick="showView('quizzes')">← Back to Quizzes</button>
+      </div>
+
+      <div id="review-list"></div>
+
+      <div id="feedback-panel" class="ai-panel hidden">
+        <div class="ai-panel-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          AI Personalised Feedback
+        </div>
+        <div id="feedback-text" class="ai-text"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<script src="js/db.js"></script>
+<script src="js/ai.js"></script>
+<script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const ME = requireAuth('student');
+if (ME) {
+  document.getElementById('nav-username').textContent = '👤 ' + ME.name;
+}
+
+function logout() { clearSession(); window.location.href = 'index.html'; }
+
+// ── View Router ───────────────────────────────────────────────────────────────
+function showView(name) {
+  ['quizzes','scores','quiz','result'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('hidden', v !== name);
+  });
+  if (name === 'quizzes') renderQuizList();
+  if (name === 'scores')  renderScores();
+}
+
+// ── Quiz List ─────────────────────────────────────────────────────────────────
+function renderQuizList() {
+  const quizzes = getQuizzes();
+  const mySubs  = getSubmissions().filter(s => s.studentId === ME.id);
+  const list    = document.getElementById('quiz-list');
+  const count   = document.getElementById('quiz-count');
+
+  count.textContent = quizzes.length + ' quiz' + (quizzes.length !== 1 ? 'zes' : '') + ' available';
+
+  if (!quizzes.length) {
+    list.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📭</div>No quizzes available yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = quizzes.map(q => {
+    const attempts = mySubs.filter(s => s.quizId === q.id);
+    const best     = attempts.length ? Math.max(...attempts.map(s => s.score)) : null;
+    return `
+    <div class="quiz-card">
+      <div>
+        <div class="quiz-card-title">${escHtml(q.title)}</div>
+        <div class="quiz-card-meta">
+          <span>📚 ${escHtml(q.subject)}</span>
+          <span>⏱ ${q.timeLimit} min</span>
+          <span>❓ ${q.questions.length} questions</span>
+        </div>
+      </div>
+      ${best !== null ? `<div style="font-size:0.85rem;color:var(--text-muted)">Best: ${scoreBadge(best)} &nbsp;(${attempts.length} attempt${attempts.length !== 1 ? 's' : ''})</div>` : ''}
+      <button class="btn btn-primary" style="justify-content:center" onclick="startQuiz('${q.id}')">
+        ${attempts.length > 0 ? 'Retake Quiz' : 'Start Quiz'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ── Scores View ───────────────────────────────────────────────────────────────
+function renderScores() {
+  const mySubs = getSubmissions().filter(s => s.studentId === ME.id);
+  const avg    = mySubs.length ? Math.round(mySubs.reduce((a,s)=>a+s.score,0)/mySubs.length) : 0;
+  const best   = mySubs.length ? Math.max(...mySubs.map(s=>s.score)) : 0;
+
+  document.getElementById('score-stats').innerHTML = `
+    <div class="stat-card gold"><div class="stat-num">${mySubs.length}</div><div class="stat-label">Quizzes Taken</div></div>
+    <div class="stat-card blue"><div class="stat-num">${avg}%</div><div class="stat-label">Average Score</div></div>
+    ${mySubs.length ? `<div class="stat-card teal"><div class="stat-num">${best}%</div><div class="stat-label">Best Score</div></div>` : ''}
+  `;
+
+  const tbody = document.getElementById('scores-tbody');
+  const empty = document.getElementById('scores-empty');
+  const table = document.getElementById('scores-table');
+
+  if (!mySubs.length) {
+    table.style.display = 'none';
+    empty.classList.remove('hidden');
+    document.getElementById('btn-study-plan').disabled = true;
+    return;
+  }
+
+  table.style.display = '';
+  empty.classList.add('hidden');
+  document.getElementById('btn-study-plan').disabled = false;
+
+  tbody.innerHTML = [...mySubs].reverse().map(s => `
+    <tr>
+      <td>${escHtml(s.quizTitle)}</td>
+      <td>${scoreBadge(s.score)}</td>
+      <td>${s.correct}/${s.total}</td>
+      <td style="color:var(--text-muted);font-size:0.85rem">${fmtDate(s.date)}</td>
+    </tr>`).join('');
+}
+
+// ── Quiz State ────────────────────────────────────────────────────────────────
+let QUIZ = null, ANSWERS = {}, QUESTION_IDX = 0, TIMER_ID = null, TIME_LEFT = 0;
+
+function startQuiz(quizId) {
+  QUIZ         = getQuizzes().find(q => q.id === quizId);
+  ANSWERS      = {};
+  QUESTION_IDX = 0;
+  TIME_LEFT    = QUIZ.timeLimit * 60;
+
+  showView('quiz');
+  renderQuestion();
+  startTimer();
+}
+
+function renderQuestion() {
+  const q   = QUIZ.questions[QUESTION_IDX];
+  const tot = QUIZ.questions.length;
+  const pct = ((QUESTION_IDX + 1) / tot) * 100;
+  const labels = ['A','B','C','D','E'];
+
+  document.getElementById('q-quiz-title').textContent = QUIZ.title;
+  document.getElementById('q-number').textContent     = `Question ${QUESTION_IDX + 1} of ${tot}`;
+  document.getElementById('q-text').textContent       = q.text;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('btn-prev').disabled = QUESTION_IDX === 0;
+  document.getElementById('btn-next').textContent = QUESTION_IDX === tot - 1 ? 'Submit Quiz ✓' : 'Next →';
+
+  const sel = ANSWERS[QUESTION_IDX];
+  document.getElementById('q-options').innerHTML = q.options.map((opt, i) => `
+    <button class="option-btn ${sel === i ? 'selected' : ''}"
+            onclick="selectAnswer(${i})">
+      <span class="option-label">${labels[i]}</span>
+      ${escHtml(opt)}
+    </button>`).join('');
+}
+
+function selectAnswer(idx) {
+  ANSWERS[QUESTION_IDX] = idx;
+  renderQuestion();
+}
+
+function prevQ() {
+  if (QUESTION_IDX > 0) { QUESTION_IDX--; renderQuestion(); }
+}
+
+function nextOrSubmit() {
+  if (QUESTION_IDX < QUIZ.questions.length - 1) {
+    QUESTION_IDX++;
+    renderQuestion();
+  } else {
+    submitQuiz();
+  }
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(TIMER_ID);
+  TIMER_ID = setInterval(() => {
+    TIME_LEFT--;
+    updateTimerDisplay();
+    if (TIME_LEFT <= 0) { clearInterval(TIMER_ID); submitQuiz(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const mm  = String(Math.floor(TIME_LEFT / 60)).padStart(2,'0');
+  const ss  = String(TIME_LEFT % 60).padStart(2,'0');
+  const el  = document.getElementById('quiz-timer');
+  el.textContent = `⏱ ${mm}:${ss}`;
+  el.classList.toggle('urgent', TIME_LEFT < 60);
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+let LAST_SUB = null;
+
+function submitQuiz() {
+  clearInterval(TIMER_ID);
+
+  const correct = QUIZ.questions.filter((q,i) => ANSWERS[i] === q.answer).length;
+  const score   = Math.round((correct / QUIZ.questions.length) * 100);
+
+  const wrongAnswers = QUIZ.questions.map((q,i) => {
+    if (ANSWERS[i] === q.answer) return null;
+    return {
+      question: q.text,
+      correct:  q.options[q.answer],
+      student:  ANSWERS[i] !== undefined ? q.options[ANSWERS[i]] : '(skipped)',
+    };
+  }).filter(Boolean);
+
+  LAST_SUB = {
+    id:           uid('sub'),
+    studentId:    ME.id,
+    studentName:  ME.name,
+    quizId:       QUIZ.id,
+    quizTitle:    QUIZ.title,
+    answers:      { ...ANSWERS },
+    correct,
+    total:        QUIZ.questions.length,
+    score,
+    wrongAnswers,
+    date:         new Date().toISOString(),
+  };
+
+  saveSubmission(LAST_SUB);
+  showResult(LAST_SUB);
+}
+
+// ── Result ────────────────────────────────────────────────────────────────────
+function showResult(sub) {
+  document.getElementById('view-quiz').classList.add('hidden');
+  document.getElementById('view-result').classList.remove('hidden');
+  document.getElementById('feedback-panel').classList.add('hidden');
+
+  document.getElementById('result-pct').textContent  = sub.score + '%';
+  document.getElementById('result-heading').textContent =
+    sub.score >= 80 ? '🏆 Excellent Work!' : sub.score >= 60 ? '👍 Good Job!' : '📚 Keep Practising!';
+  document.getElementById('result-sub').textContent  =
+    `${sub.correct} of ${sub.total} correct  ·  ${sub.quizTitle}`;
+
+  const ring = document.getElementById('result-ring');
+  ring.style.borderColor = sub.score >= 80 ? 'var(--green)' : sub.score >= 60 ? 'var(--gold)' : 'var(--red)';
+
+  // Review items
+  document.getElementById('review-list').innerHTML = QUIZ.questions.map((q,i) => {
+    const isOk = sub.answers[i] === q.answer;
+    return `
+    <div class="review-item ${isOk ? 'correct' : 'wrong'}">
+      <div class="review-q">
+        <span>${isOk ? '✅' : '❌'}</span> ${escHtml(q.text)}
+      </div>
+      <div class="review-ans">
+        Correct: <strong style="color:var(--green)">${escHtml(q.options[q.answer])}</strong>
+        ${!isOk ? ` &nbsp;·&nbsp; Your answer: <strong style="color:var(--red)">${sub.answers[i] !== undefined ? escHtml(q.options[sub.answers[i]]) : '(skipped)'}</strong>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── AI Feedback ───────────────────────────────────────────────────────────────
+async function getAIFeedback() {
+  const btn  = document.getElementById('btn-ai-feedback');
+  const panel = document.getElementById('feedback-panel');
+  const text  = document.getElementById('feedback-text');
+
+  btn.disabled    = true;
+  btn.innerHTML   = '<span class="spinner"></span> Analysing…';
+  panel.classList.remove('hidden');
+  text.textContent = 'The AI is reviewing your answers…';
+
+  const result = await callAI(PROMPTS.studentFeedback({
+    studentName:  ME.name,
+    quizTitle:    LAST_SUB.quizTitle,
+    score:        LAST_SUB.score,
+    correct:      LAST_SUB.correct,
+    total:        LAST_SUB.total,
+    wrongAnswers: LAST_SUB.wrongAnswers,
+  }));
+
+  text.textContent = result || 'Could not get AI feedback right now.';
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Get AI Feedback';
+}
+
+async function getStudyPlan() {
+  const btn   = document.getElementById('btn-study-plan');
+  const panel = document.getElementById('study-plan-panel');
+  const text  = document.getElementById('study-plan-text');
+
+  btn.disabled   = true;
+  btn.innerHTML  = '<span class="spinner"></span> Generating…';
+  panel.classList.remove('hidden');
+  text.textContent = 'The AI is crafting your personalised study plan…';
+
+  const mySubs = getSubmissions().filter(s => s.studentId === ME.id);
+  const result = await callAI(PROMPTS.studentStudyPlan({ studentName: ME.name, history: mySubs }));
+
+  text.textContent = result || 'Could not generate study plan right now.';
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> AI Study Plan';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+if (ME) renderQuizList();
+</script>
+</body>
+</html>

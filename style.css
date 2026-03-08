@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduQuest — Teacher</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    <span class="nav-title">EduQuest</span>
+    <span class="nav-badge teacher">Teacher</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-username"></span>
+    <button class="btn btn-ghost" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</nav>
+
+<!-- ── App ─────────────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- ── OVERVIEW ── -->
+  <div id="view-overview" class="page">
+    <h2 class="page-title">Overview</h2>
+    <p class="page-subtitle">Your classroom at a glance</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showView('overview')">🏠 Overview</button>
+      <button class="tab-btn"        onclick="showView('quizzes')">📋 My Quizzes</button>
+      <button class="tab-btn"        onclick="showView('results')">📊 Results</button>
+      <button class="tab-btn"        onclick="showView('create')">➕ Create</button>
+    </div>
+
+    <div class="stat-grid" id="overview-stats"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-teal" id="btn-class-ai" onclick="getClassOverview()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Class Overview
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recent Submissions</div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Student</th><th>Quiz</th><th>Score</th><th>Date</th></tr></thead>
+        <tbody id="recent-tbody"></tbody></table>
+      </div>
+      <div id="recent-empty" class="empty-state hidden">
+        <div class="empty-icon">📭</div>No submissions yet.
+      </div>
+    </div>
+
+    <div id="class-ai-panel" class="ai-panel hidden">
+      <div class="ai-panel-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Class Overview
+      </div>
+      <div id="class-ai-text" class="ai-text"></div>
+    </div>
+  </div>
+
+  <!-- ── MY QUIZZES ── -->
+  <div id="view-quizzes" class="page hidden">
+    <h2 class="page-title">My Quizzes</h2>
+    <p class="page-subtitle" id="quiz-count-label">—</p>
+    <div class="tabs">
+      <button class="tab-btn"        onclick="showView('overview')">🏠 Overview</button>
+      <button class="tab-btn active" onclick="showView('quizzes')">📋 My Quizzes</button>
+      <button class="tab-btn"        onclick="showView('results')">📊 Results</button>
+      <button class="tab-btn"        onclick="showView('create')">➕ Create</button>
+    </div>
+    <div id="quizzes-list"></div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="view-results" class="page hidden">
+    <h2 class="page-title">Student Results</h2>
+    <p class="page-subtitle">Track and analyse performance</p>
+    <div class="tabs">
+      <button class="tab-btn"        onclick="showView('overview')">🏠 Overview</button>
+      <button class="tab-btn"        onclick="showView('quizzes')">📋 My Quizzes</button>
+      <button class="tab-btn active" onclick="showView('results')">📊 Results</button>
+      <button class="tab-btn"        onclick="showView('create')">➕ Create</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <select id="results-filter" onchange="renderResults()" style="width:auto;min-width:200px">
+        <option value="all">All Quizzes</option>
+      </select>
+      <button class="btn btn-teal" id="btn-quiz-ai" onclick="getQuizAnalysis()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Analysis
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Student</th><th>Quiz</th><th>Score</th><th>Correct</th><th>Date</th></tr></thead>
+        <tbody id="results-tbody"></tbody></table>
+      </div>
+      <div id="results-empty" class="empty-state hidden">
+        <div class="empty-icon">📭</div>No submissions for this selection.
+      </div>
+    </div>
+
+    <div id="quiz-ai-panel" class="ai-panel hidden">
+      <div class="ai-panel-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        AI Teaching Insights
+      </div>
+      <div id="quiz-ai-text" class="ai-text"></div>
+    </div>
+  </div>
+
+  <!-- ── CREATE QUIZ ── -->
+  <div id="view-create" class="page hidden">
+    <h2 class="page-title">Create Quiz</h2>
+    <p class="page-subtitle">Build a new assessment for your students</p>
+    <div class="tabs">
+      <button class="tab-btn"        onclick="showView('overview')">🏠 Overview</button>
+      <button class="tab-btn"        onclick="showView('quizzes')">📋 My Quizzes</button>
+      <button class="tab-btn"        onclick="showView('results')">📊 Results</button>
+      <button class="tab-btn active" onclick="showView('create')">➕ Create</button>
+    </div>
+
+    <div style="max-width:720px">
+      <div id="create-error" class="error-box hidden"></div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="field-label" for="qt-title">Quiz Title</label>
+            <input type="text" id="qt-title" placeholder="e.g. Chapter 5 Review"/>
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="qt-subject">Subject</label>
+            <input type="text" id="qt-subject" placeholder="e.g. Mathematics"/>
+          </div>
+        </div>
+        <div class="form-group" style="max-width:200px">
+          <label class="field-label" for="qt-time">Time Limit (minutes)</label>
+          <input type="number" id="qt-time" value="10" min="1" max="180"/>
+        </div>
+      </div>
+
+      <div id="questions-container"></div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn-ghost" onclick="addQuestion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Question
+        </button>
+        <button class="btn btn-primary" onclick="saveQuizForm()">Save Quiz</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- Delete Confirm Modal -->
+<div id="delete-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 class="modal-title">Delete Quiz?</h3>
+    <p class="modal-text">This will permanently delete the quiz and all its student submissions. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/ai.js"></script>
+<script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const ME = requireAuth('teacher');
+if (ME) document.getElementById('nav-username').textContent = '👤 ' + ME.name;
+function logout() { clearSession(); window.location.href = 'index.html'; }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function myQuizzes()  { return getQuizzes().filter(q => q.teacherId === ME.id); }
+function mySubmissions() {
+  const ids = myQuizzes().map(q => q.id);
+  return getSubmissions().filter(s => ids.includes(s.quizId));
+}
+
+// ── View Router ───────────────────────────────────────────────────────────────
+function showView(name) {
+  ['overview','quizzes','results','create'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('hidden', v !== name);
+  });
+  if (name === 'overview') renderOverview();
+  if (name === 'quizzes')  renderQuizList();
+  if (name === 'results')  renderResultsView();
+  if (name === 'create')   initCreateForm();
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const qs   = myQuizzes();
+  const subs = mySubmissions();
+  const avg  = subs.length ? Math.round(subs.reduce((a,s)=>a+s.score,0)/subs.length) : 0;
+  const students = getUsers().filter(u => u.role === 'student');
+
+  document.getElementById('overview-stats').innerHTML = `
+    <div class="stat-card gold"><div class="stat-num">${qs.length}</div><div class="stat-label">Quizzes Created</div></div>
+    <div class="stat-card teal"><div class="stat-num">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
+    <div class="stat-card blue"><div class="stat-num">${avg}%</div><div class="stat-label">Class Average</div></div>
+    <div class="stat-card red"><div class="stat-num">${students.length}</div><div class="stat-label">Students</div></div>
+  `;
+
+  const recent = [...subs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+  const tbody  = document.getElementById('recent-tbody');
+  const empty  = document.getElementById('recent-empty');
+
+  if (!recent.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = recent.map(s => `
+    <tr>
+      <td>${escHtml(s.studentName)}</td>
+      <td>${escHtml(s.quizTitle)}</td>
+      <td>${scoreBadge(s.score)}</td>
+      <td style="color:var(--text-muted);font-size:0.85rem">${fmtDate(s.date)}</td>
+    </tr>`).join('');
+}
+
+// ── AI Class Overview ─────────────────────────────────────────────────────────
+async function getClassOverview() {
+  const btn   = document.getElementById('btn-class-ai');
+  const panel = document.getElementById('class-ai-panel');
+  const text  = document.getElementById('class-ai-text');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analysing…';
+  panel.classList.remove('hidden');
+  text.textContent = 'The AI is analysing your class data…';
+
+  const result = await callAI(PROMPTS.classOverview({
+    teacherName:    ME.name,
+    allSubmissions: mySubmissions(),
+    quizzes:        myQuizzes(),
+  }));
+
+  text.textContent = result || 'Could not get AI overview right now.';
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> AI Class Overview';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── My Quizzes ────────────────────────────────────────────────────────────────
+function renderQuizList() {
+  const qs   = myQuizzes();
+  const subs = mySubmissions();
+  document.getElementById('quiz-count-label').textContent = qs.length + ' quiz' + (qs.length!==1?'zes':'') + ' created';
+
+  const container = document.getElementById('quizzes-list');
+  if (!qs.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>No quizzes yet. Go to "Create" to make your first one.</div>`;
+    return;
+  }
+
+  container.innerHTML = qs.map(q => {
+    const qSubs = subs.filter(s => s.quizId === q.id);
+    const avg   = qSubs.length ? Math.round(qSubs.reduce((a,s)=>a+s.score,0)/qSubs.length) : null;
+    return `
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:12px">
+      <div>
+        <div style="font-size:1.05rem;font-weight:600;margin-bottom:4px">${escHtml(q.title)}</div>
+        <div style="font-size:0.83rem;color:var(--text-muted);display:flex;gap:16px;flex-wrap:wrap">
+          <span>📚 ${escHtml(q.subject)}</span>
+          <span>❓ ${q.questions.length} questions</span>
+          <span>⏱ ${q.timeLimit} min</span>
+          ${avg!==null ? `<span>Avg: ${scoreBadge(avg)}</span>` : ''}
+          <span>${qSubs.length} submission${qSubs.length!==1?'s':''}</span>
+        </div>
+      </div>
+      <button class="btn btn-danger" onclick="openDeleteModal('${q.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        Delete
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ── Delete Modal ──────────────────────────────────────────────────────────────
+let pendingDeleteId = null;
+
+function openDeleteModal(id) {
+  pendingDeleteId = id;
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+function closeDeleteModal() {
+  pendingDeleteId = null;
+  document.getElementById('delete-modal').classList.add('hidden');
+}
+function confirmDelete() {
+  if (pendingDeleteId) { deleteQuiz(pendingDeleteId); closeDeleteModal(); renderQuizList(); }
+}
+
+// ── Results View ──────────────────────────────────────────────────────────────
+function renderResultsView() {
+  const qs = myQuizzes();
+  const sel = document.getElementById('results-filter');
+  // Rebuild filter options
+  sel.innerHTML = '<option value="all">All Quizzes</option>' +
+    qs.map(q => `<option value="${q.id}">${escHtml(q.title)}</option>`).join('');
+  renderResults();
+}
+
+function renderResults() {
+  const val  = document.getElementById('results-filter').value;
+  const subs = mySubmissions().filter(s => val === 'all' || s.quizId === val);
+  const tbody = document.getElementById('results-tbody');
+  const empty = document.getElementById('results-empty');
+  const table = tbody.closest('table');
+
+  if (!subs.length) { table.style.display='none'; empty.classList.remove('hidden'); return; }
+  table.style.display=''; empty.classList.add('hidden');
+
+  tbody.innerHTML = [...subs].reverse().map(s => `
+    <tr>
+      <td>${escHtml(s.studentName)}</td>
+      <td>${escHtml(s.quizTitle)}</td>
+      <td>${scoreBadge(s.score)}</td>
+      <td>${s.correct}/${s.total}</td>
+      <td style="color:var(--text-muted);font-size:0.85rem">${fmtDate(s.date)}</td>
+    </tr>`).join('');
+}
+
+// ── AI Quiz Analysis ──────────────────────────────────────────────────────────
+async function getQuizAnalysis() {
+  const val  = document.getElementById('results-filter').value;
+  const subs = mySubmissions().filter(s => val === 'all' || s.quizId === val);
+  if (!subs.length) { alert('No submissions to analyse.'); return; }
+
+  const btn   = document.getElementById('btn-quiz-ai');
+  const panel = document.getElementById('quiz-ai-panel');
+  const text  = document.getElementById('quiz-ai-text');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analysing…';
+  panel.classList.remove('hidden');
+  text.textContent = 'The AI is reviewing student results…';
+
+  const quizObj = val === 'all' ? null : myQuizzes().find(q => q.id === val);
+  const title   = quizObj ? quizObj.title : 'All Quizzes';
+  const questions = quizObj ? quizObj.questions : [];
+
+  const result = await callAI(PROMPTS.teacherAnalysis({ quizTitle: title, submissions: subs, questions }));
+
+  text.textContent = result || 'Could not get AI analysis right now.';
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> AI Analysis';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── Create Quiz Form ──────────────────────────────────────────────────────────
+let questionsList = [];
+
+function initCreateForm() {
+  document.getElementById('qt-title').value   = '';
+  document.getElementById('qt-subject').value = '';
+  document.getElementById('qt-time').value    = '10';
+  document.getElementById('create-error').classList.add('hidden');
+  questionsList = [{ text:'', options:['','','',''], answer:0 }];
+  renderQuestionBlocks();
+}
+
+function renderQuestionBlocks() {
+  const labels = ['A','B','C','D'];
+  document.getElementById('questions-container').innerHTML =
+    questionsList.map((q, qi) => `
+    <div class="question-block">
+      <div class="q-block-header">
+        <span class="q-block-num">Question ${qi+1}</span>
+        ${questionsList.length > 1
+          ? `<button class="btn btn-danger" onclick="removeQuestion(${qi})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              Remove
+            </button>`
+          : ''}
+      </div>
+      <div class="form-group">
+        <label class="field-label">Question Text</label>
+        <input type="text" value="${escHtml(q.text)}" oninput="updateQText(${qi}, this.value)" placeholder="Enter your question…"/>
+      </div>
+      <label class="field-label">Answer Options <span style="color:var(--text-muted);font-size:0.75rem;text-transform:none;letter-spacing:0">(select the correct one)</span></label>
+      ${q.options.map((opt, oi) => `
+        <div class="option-row">
+          <input type="radio" name="correct-${qi}" ${q.answer === oi ? 'checked' : ''} onchange="updateQAnswer(${qi}, ${oi})"/>
+          <input type="text" value="${escHtml(opt)}" oninput="updateQOption(${qi},${oi},this.value)" placeholder="Option ${labels[oi]}"/>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function addQuestion() {
+  questionsList.push({ text:'', options:['','','',''], answer:0 });
+  renderQuestionBlocks();
+}
+function removeQuestion(i) {
+  questionsList.splice(i,1);
+  renderQuestionBlocks();
+}
+function updateQText(i, v)         { questionsList[i].text       = v; }
+function updateQAnswer(i, oi)      { questionsList[i].answer     = oi; }
+function updateQOption(i, oi, v)   { questionsList[i].options[oi] = v; }
+
+function saveQuizForm() {
+  const errEl = document.getElementById('create-error');
+  errEl.classList.add('hidden');
+
+  const title   = document.getElementById('qt-title').value.trim();
+  const subject = document.getElementById('qt-subject').value.trim();
+  const time    = parseInt(document.getElementById('qt-time').value, 10);
+
+  if (!title)   { showCreateError('Quiz title is required.'); return; }
+  if (!subject) { showCreateError('Subject is required.');    return; }
+  if (!time || time < 1) { showCreateError('Enter a valid time limit.'); return; }
+
+  for (let i=0; i<questionsList.length; i++) {
+    const q = questionsList[i];
+    if (!q.text.trim()) { showCreateError(`Question ${i+1} text is required.`); return; }
+    if (q.options.some(o => !o.trim())) { showCreateError(`All options in Question ${i+1} are required.`); return; }
+  }
+
+  const quiz = {
+    id:        uid('quiz'),
+    teacherId: ME.id,
+    title, subject,
+    timeLimit: time,
+    createdAt: new Date().toISOString(),
+    questions: questionsList.map((q,i) => ({ ...q, id: uid('q') })),
+  };
+
+  saveQuiz(quiz);
+  alert(`Quiz "${title}" saved successfully! (${questionsList.length} questions)`);
+  showView('quizzes');
+}
+
+function showCreateError(msg) {
+  const el = document.getElementById('create-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+if (ME) renderOverview();
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+# 🎓 EduQuest — Intelligent Learning Platform
+
+A full-featured teacher/student quiz platform with AI-powered analysis, built with vanilla HTML, CSS, and JavaScript. No build tools required — works directly in the browser and can be hosted on **GitHub Pages**.
+
+---
+
+## ✨ Features
+
+### 👨‍🏫 Teacher Portal
+- Create unlimited quizzes with multiple-choice questions
+- Set time limits per quiz
+- View all student submissions and scores
+- **AI Class Overview** — get an AI summary of overall class health
+- **AI Quiz Analysis** — deep insights on which students & topics need attention
+- Delete quizzes (with confirmation)
+
+### 🧑‍🎓 Student Portal
+- Browse and take available quizzes with a live countdown timer
+- See detailed answer review after each quiz (✅ correct / ❌ wrong)
+- **AI Instant Feedback** — personalised explanation of wrong answers after each quiz
+- **AI Study Plan** — AI-generated weekly study plan based on full score history
+- Track all scores and performance over time
+
+---
+
+## 🚀 Getting Started
+
+### Option 1 — GitHub Pages (Recommended)
+
+1. Fork this repository
+2. Go to **Settings → Pages → Source → `main` branch → `/` (root)**
+3. Your site will be live at `https://<your-username>.github.io/<repo-name>/`
+
+### Option 2 — Run Locally
+
+Just open `index.html` in your browser. No server needed.
+
+```bash
+git clone https://github.com/YOUR_USERNAME/eduquest.git
+cd eduquest
+# Open index.html in your browser
+```
+
+Or use a simple local server:
+```bash
+npx serve .
+# or
+python -m http.server 8080
+```
+
+---
+
+## 🤖 AI Setup (Anthropic API Key)
+
+This app uses the **Anthropic Claude API** for AI feedback.
+
+1. Get a free API key at [console.anthropic.com](https://console.anthropic.com)
+2. When you click any **"AI …"** button for the first time, you'll be prompted to enter your key
+3. The key is saved in your browser's `localStorage` — it never leaves your device
+
+> **Note:** The API key is stored locally in your browser only. It is never sent to any server other than Anthropic's API directly.
+
+---
+
+## 🔑 Demo Accounts
+
+| Role    | Username  | Password     |
+|---------|-----------|--------------|
+| Teacher | `teacher`  | `teacher123` |
+| Student | `student1` | `pass123`    |
+| Student | `student2` | `pass123`    |
+
+---
+
+## 📁 File Structure
+
+```
+eduquest/
+├── index.html        ← Login page
+├── teacher.html      ← Teacher dashboard
+├── student.html      ← Student dashboard
+├── css/
+│   └── style.css     ← All shared styles
+├── js/
+│   ├── db.js         ← localStorage database + auth helpers
+│   └── ai.js         ← Anthropic API wrapper + prompt templates
+└── README.md
+```
+
+---
+
+## 💾 Data Storage
+
+All data is stored in the browser's `localStorage` under the `eq_` namespace:
+
+| Key              | Contents                        |
+|------------------|---------------------------------|
+| `eq_users`       | User accounts (teachers & students) |
+| `eq_quizzes`     | All quizzes and questions       |
+| `eq_submissions` | Student answers and scores      |
+| `eq_session`     | Current logged-in user          |
+| `eq_api_key`     | Your Anthropic API key          |
+
+> Data is **per-browser** and **per-device**. For a shared/multi-device setup, consider replacing `db.js` with a backend like Firebase or Supabase.
+
+---
+
+## 🛠 Customisation
+
+### Adding more users
+Edit the `SEED_USERS` array in `js/db.js`. Changes apply when localStorage is cleared.
+
+### Changing the AI model
+Edit `AI_MODEL` in `js/ai.js`.
+
+### Styling
+All CSS variables are at the top of `css/style.css` under `:root`.
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and distribute.

@@ -1,0 +1,157 @@
+// ─── EduQuest — ai.js ────────────────────────────────────────────────────────
+// Wrapper around the Anthropic Messages API.
+// API key is stored in localStorage after the user enters it once.
+
+const AI_MODEL = 'claude-sonnet-4-20250514';
+
+function getApiKey() {
+  return localStorage.getItem('eq_api_key') || '';
+}
+function setApiKey(key) {
+  localStorage.setItem('eq_api_key', key.trim());
+}
+
+async function callAI(prompt, onToken) {
+  const key = getApiKey();
+  if (!key) {
+    const k = prompt_apiKey();
+    if (!k) return null;
+    setApiKey(k);
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':         'application/json',
+        'x-api-key':            getApiKey(),
+        'anthropic-version':    '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem('eq_api_key');
+      alert('Invalid API key. Please re-enter your Anthropic API key.');
+      return null;
+    }
+
+    const data = await res.json();
+    return data.content?.[0]?.text || '(No response)';
+  } catch (err) {
+    console.error('AI call failed:', err);
+    return 'Could not reach the AI service. Check your internet connection.';
+  }
+}
+
+function prompt_apiKey() {
+  return window.prompt(
+    'Enter your Anthropic API key (starts with "sk-ant-").\n\n' +
+    'It will be saved locally in your browser.\n' +
+    'Get one at https://console.anthropic.com'
+  );
+}
+
+// ── AI Prompts ────────────────────────────────────────────────────────────────
+const PROMPTS = {
+
+  studentFeedback({ studentName, quizTitle, score, correct, total, wrongAnswers }) {
+    const wrongs = wrongAnswers.length
+      ? wrongAnswers.map(w => `• Q: "${w.question}"\n  Correct: "${w.correct}"  |  Student answered: "${w.student}"`).join('\n')
+      : 'None — perfect score!';
+    return `You are a warm, encouraging tutor. A student named ${studentName} just completed the quiz "${quizTitle}" and scored ${score}% (${correct}/${total} correct).
+
+Wrong answers:
+${wrongs}
+
+Please provide:
+1. A brief, encouraging opening based on their score
+2. Clear, simple explanations for each wrong answer (what's correct and why)
+3. Specific study tips targeting their weak areas
+4. A short motivational closing
+
+Keep it concise, kind, and actionable. Use plain text (no markdown).`;
+  },
+
+  studentStudyPlan({ studentName, history }) {
+    const rows = history.map(s => `• "${s.quizTitle}" — ${s.score}% (${s.correct}/${s.total})`).join('\n');
+    const allWrong = history.flatMap(s => (s.wrongAnswers || []).map(w => `"${w.question}" (correct: "${w.correct}")`));
+    const wrongList = allWrong.length ? allWrong.join('\n') : 'None recorded.';
+    return `You are a personal academic coach. Here is ${studentName}'s full quiz history:
+
+${rows}
+
+Consistently wrong questions:
+${wrongList}
+
+Please provide:
+1. An overall performance assessment (encouraging tone)
+2. Top 3 weak topic areas with evidence
+3. A concrete 1-week study plan to address these weaknesses
+4. Daily study time recommendations
+5. Encouragement and next steps
+
+Use plain text, no markdown. Be specific and actionable.`;
+  },
+
+  teacherAnalysis({ quizTitle, submissions, questions }) {
+    const rows = submissions.map(s => `• ${s.studentName}: ${s.score}% (${s.correct}/${s.total})`).join('\n');
+
+    // Count how many got each question wrong
+    const wrongCounts = {};
+    questions.forEach(q => { wrongCounts[q.text] = 0; });
+    submissions.forEach(s => {
+      (s.wrongAnswers || []).forEach(w => {
+        if (wrongCounts[w.question] !== undefined) wrongCounts[w.question]++;
+      });
+    });
+    const hardQ = Object.entries(wrongCounts)
+      .filter(([,c]) => c > 0)
+      .sort((a,b) => b[1]-a[1])
+      .map(([q,c]) => `• "${q}" — ${c} student(s) got this wrong`)
+      .join('\n');
+
+    return `You are an experienced teacher's assistant. Here are the results for the quiz "${quizTitle}" (${submissions.length} students):
+
+Scores:
+${rows}
+
+Most-missed questions:
+${hardQ || 'All students answered correctly.'}
+
+Please provide:
+1. Class performance summary (brief)
+2. Which students need immediate attention and why
+3. Which topics/questions the whole class struggled with
+4. Concrete recommendations for your next lesson
+5. Suggested remedial activities or resources
+
+Use plain text, no markdown. Be practical and direct.`;
+  },
+
+  classOverview({ teacherName, allSubmissions, quizzes }) {
+    const quizSummaries = quizzes.map(q => {
+      const subs = allSubmissions.filter(s => s.quizId === q.id);
+      const avg = subs.length ? Math.round(subs.reduce((a,s)=>a+s.score,0)/subs.length) : 'N/A';
+      return `• "${q.title}" (${q.subject}): ${subs.length} submission(s), avg ${avg}%`;
+    }).join('\n');
+
+    return `You are a school analytics assistant. Give teacher ${teacherName} a high-level overview of their class:
+
+Quizzes & averages:
+${quizSummaries || 'No data yet.'}
+
+Provide:
+1. Overall class health (are students performing well?)
+2. Best and worst performing quizzes and possible reasons
+3. Recommended actions for the next teaching cycle
+4. Any patterns or insights worth noting
+
+Plain text only, no markdown. Keep it under 300 words.`;
+  },
+};
